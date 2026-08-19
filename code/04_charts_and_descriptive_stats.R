@@ -71,7 +71,7 @@ ggplot(occup.scatter %>% filter(pandemic.cat != "Pandemic (2020-2021)")) +
   theme_bw() +
   theme(axis.text = element_text(colour = "black"), text = element_text(size =9),
         legend.position = "none") 
-ggsave("charts/occup_WFH_x_DNscore.png", width = 16, height = 9.8, units = "cm")
+ggsave(paste0(chart_output, "occup_WFH_x_DNscore.png"), width = 16, height = 9.8, units = "cm")
 
 # Job distance v distance to nearest city centre scatter plot
 dist.scatter <- df %>%
@@ -113,7 +113,7 @@ ggplot(dist.scatter %>% filter(pandemic.cat != "Pandemic (2020-2021)")) +
   theme_bw() +
   theme(axis.text = element_text(colour = "black"), text = element_text(size =9),
         legend.position = "none") 
-ggsave("charts/dist_work_x_city.png", width = 16, height = 9, units = "cm")
+ggsave(paste0(chart_output, "dist_work_x_city.png"), width = 16, height = 9, units = "cm")
 
 
 
@@ -236,7 +236,7 @@ ggplot(summ.stats.WFHmost.year) +
   theme_classic() +
   theme(axis.title.x = element_blank(), legend.position = "bottom",
         axis.text = element_text(colour = "black"),text = element_text(size = 8))
-ggsave("charts/WSWFH descript charts/WFHmost_year.png", width = 16, height = 10, units = "cm")
+ggsave(paste0(chart_output, "WSWFH descript charts/WFHmost_year.png"), width = 16, height = 10, units = "cm")
 
 # Density plot of WFH rates
 df %>% filter(wfh.any == "WFH") %>%
@@ -251,7 +251,7 @@ df %>% filter(wfh.any == "WFH") %>%
   labs(x = "Usual WFH hours as share of total hours worked (%)", y = "Number of observations") +
   scale_y_continuous(labels = scales::comma) +
   theme(axis.text = element_text(colour = "black"),text = element_text(size = 8))
-ggsave("charts/WSWFH descript charts/WFHdensity_pandemicera.png", width = 16, height = 10, units = "cm")
+ggsave(paste0(chart_output, "WSWFH descript charts/WFHdensity_pandemicera.png"), width = 16, height = 10, units = "cm")
 df %>% count(wfh.prop ==1, pandemic.cat) #basic summaries of distribution for fully remote
 
 # Sankey diagram
@@ -342,7 +342,7 @@ ggplot(age.summ.WFH.pandemic.5yr) + # Chart prop WFHany by age (5 yr bins)
         text = element_text(size = 8), axis.text = element_text(colour = "black")) +
   guides(fill = guide_legend(nrow = 2, byrow = TRUE)) +
   scale_y_continuous(limits = c(0, 50), breaks = seq(0, 50, by = 10)) 
-ggsave("charts/age5yr_pandemicera_wfhany.png", width = 16, height = 8, units = "cm")
+ggsave(paste0(chart_output, "age5yr_pandemicera_wfhany.png"), width = 16, height = 8, units = "cm")
 ggplot(age.summ.WFH.pandemic.5yr) + # Chart mean WFHmost by age (5 yr bins)
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=age.cat.5yr), 
            colour = "black", position = position_dodge()) +
@@ -358,7 +358,7 @@ ggplot(age.summ.WFH.pandemic.5yr) + # Chart mean WFHmost by age (5 yr bins)
         text = element_text(size = 8), axis.text = element_text(colour = "black")) +
   guides(fill = guide_legend(nrow = 2, byrow = TRUE)) +
   scale_y_continuous(limits = c(0, 35), breaks = seq(0, 70, by = 5)) 
-ggsave("charts/age5yr_pandemicera_wfhmost.png", width = 16, height = 8, units = "cm")
+ggsave(paste0(chart_output, "age5yr_pandemicera_wfhmost.png"), width = 16, height = 8, units = "cm")
 
 # Gender summary stats
 fem.summ.WFH.pandemic <- df %>%  
@@ -388,7 +388,7 @@ ggplot(fem.summ.WFH.pandemic) + # Chart prop WFHany by female
   scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/female_pandemicera_wfhany.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "female_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
 ggplot(fem.summ.WFH.pandemic) + # Chart prop WFHmost by female
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=female.cat), 
            position = position_dodge(), colour = "black") +
@@ -403,7 +403,7 @@ ggplot(fem.summ.WFH.pandemic) + # Chart prop WFHmost by female
   scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/female_pandemicera_wfhmost.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "female_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
 # Disability summary stats
 disab.summ.WFH.pandemic <- df %>% 
@@ -433,7 +433,7 @@ ggplot(disab.summ.WFH.pandemic) + # Chart prop WFHany by disab
   scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/disab_pandemicera_wfhany.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "disab_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
 ggplot(disab.summ.WFH.pandemic) + # Chart prop WFHmost by disab
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=disab.cat), 
            position = position_dodge(), colour = "black") +
@@ -448,7 +448,7 @@ ggplot(disab.summ.WFH.pandemic) + # Chart prop WFHmost by disab
   scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/disab_pandemicera_wfhmost.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "disab_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
 # Education summary stats
 uni.summ.WFH.pandemic <- df %>%  
@@ -478,7 +478,7 @@ ggplot(uni.summ.WFH.pandemic) + # Chart prop WFHany by unieduc
   scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/unieduc_pandemicera_wfhany.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "unieduc_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
 ggplot(uni.summ.WFH.pandemic) + # Chart prop WFHmost by unieduc
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=unieduc.cat), 
            position = position_dodge(), colour = "black") +
@@ -493,7 +493,7 @@ ggplot(uni.summ.WFH.pandemic) + # Chart prop WFHmost by unieduc
   scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/unieduc_pandemicera_wfhmost.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "unieduc_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
 # Married summary stats
 marr.summ.WFH.pandemic <- df %>%  
@@ -523,7 +523,7 @@ ggplot(marr.summ.WFH.pandemic) + # Chart prop WFHany by ismarr
   scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/marr_pandemicera_wfhany.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "marr_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
 ggplot(marr.summ.WFH.pandemic) + # Chart prop WFHmost by marr
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=ismarr.cat), 
            position = position_dodge(), colour = "black") +
@@ -538,7 +538,7 @@ ggplot(marr.summ.WFH.pandemic) + # Chart prop WFHmost by marr
   scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/marr_pandemicera_wfhmost.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "marr_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
 # Supervisor summary stats
 sup.summ.WFH.pandemic <- df %>%  
@@ -568,7 +568,7 @@ ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHany by job.supervise
   scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/superv_pandemicera_wfhany.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "superv_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
 ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHmost by job.supervise
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=job.supervise.cat), 
            position = position_dodge(), colour = "black") +
@@ -583,7 +583,7 @@ ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHmost by job.supervise
   scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/superv_pandemicera_wfhmost.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "superv_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
 # Urban summary stats
 urban.summ.WFH.pandemic <- df %>%  
@@ -613,7 +613,7 @@ ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHany by urban
   scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/urban_pandemicera_wfhany.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "urban_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
 ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHmost by urban
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=urban.cat), 
            position = position_dodge(), colour = "black") +
@@ -628,7 +628,7 @@ ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHmost by urban
   scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave("charts/urban_pandemicera_wfhmost.png", width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "urban_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
 # Occupation summary stats
 occ.summ.WFH.pandemic <- df %>% 
@@ -656,7 +656,7 @@ ggplot(occ.summ.WFH.pandemic) + # Chart prop WFHany by occup
   theme(legend.position = "none", axis.text = element_text(colour = "black"),
         text = element_text(size = 9), axis.title.y = element_blank(),
         panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave("charts/occ_pandemicera_wfhany.png", width = 16, height = 8, units = "cm")
+ggsave(paste0(chart_output, "occ_pandemicera_wfhany.png"), width = 16, height = 8, units = "cm")
 ggplot(occ.summ.WFH.pandemic) + # Chart prop WFHmost by occup
   geom_col(aes(y=job.occ.1, x=100*p.wfh.most, fill=pandemic.cat), 
            position = position_dodge(width = 1.2), colour = "black") +
@@ -669,7 +669,7 @@ ggplot(occ.summ.WFH.pandemic) + # Chart prop WFHmost by occup
   theme(legend.position = "none", axis.text = element_text(colour = "black"),
         text = element_text(size = 9), axis.title.y = element_blank(),
         panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave("charts/occ_pandemicera_wfhmost.png", width = 16, height = 8, units = "cm")
+ggsave(paste0(chart_output, "occ_pandemicera_wfhmost.png"), width = 16, height = 8, units = "cm")
 
 ### Industry summary stats ###
 ind.summ.WFH.pandemic <- df %>% 
@@ -697,7 +697,7 @@ ggplot(ind.summ.WFH.pandemic) + # Chart prop WFHany by urban
   theme(legend.position = "none", axis.text = element_text(colour = "black"),
         text = element_text(size = 9), axis.title.y = element_blank(),
         panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave("charts/indust_pandemicera_wfhany.png", width = 16, height = 11.5, units = "cm")
+ggsave(paste0(chart_output, "indust_pandemicera_wfhany.png"), width = 16, height = 11.5, units = "cm")
 ggplot(ind.summ.WFH.pandemic) + # Chart prop WFHany by urban
   geom_col(aes(y=job.ind.1, x=100*p.wfh.most, fill=pandemic.cat), 
            position = position_dodge(width = 1.2), colour = "black") +
@@ -710,4 +710,4 @@ ggplot(ind.summ.WFH.pandemic) + # Chart prop WFHany by urban
   theme(legend.position = "none", axis.text = element_text(colour = "black"),
         text = element_text(size = 9), axis.title.y = element_blank(),
         panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave("charts/indust_pandemicera_wfhmost.png", width = 16, height = 11.5, units = "cm")
+ggsave(paste0(chart_output, "indust_pandemicera_wfhmost.png"), width = 16, height = 11.5, units = "cm")
