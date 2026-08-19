@@ -11,8 +11,19 @@ hilda_data <- "location/" # Folder location where combined data from HILDA wave 
 output <- "location/" # Desired location for data and regression outputs
 chart_output <- "location/" # Desired location for chart outputs
 
+
 #### GITHUB SOURCE ####
 base_url <- "https://raw.githubusercontent.com/amollross/whostillWFH/main/" 
+
+
+#### SET-UP ####
+install.packages('haven'); install.packages('tidyverse'); install.packages('plm'); install.packages('RColorBrewer'); install.packages('fixest'); 
+install.packages('sf'); install.packages('absmapsdata'); install.packages('modelsummary'); install.packages('car'); install.packages('broom')
+library(haven); library(tidyverse); library(plm); library(RColorBrewer); library(fixest); 
+library(sf); library(absmapsdata); library(modelsummary); library(car); library(broom)
+options(scipen = 999)
+
+setwd(output)
 
 
 #### RUN COMMANDS ####
