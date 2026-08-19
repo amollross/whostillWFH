@@ -1,9 +1,9 @@
-X,Y,city
-151.207144,-33.867426,Sydney
-144.963158,-37.814262,Melbourne
-153.025252,-27.469656,Brisbane
-115.856492,-31.954693,Perth
-138.599946,-34.928625,Adelaide
-147.328926,-42.882084,Hobart
-149.128692,-35.282044,Canberra
-130.841617,-12.463011,Darwin
+X,Y,city,location
+151.207144,-33.867426,Sydney,"Intersection of Martin Pl and George St"
+144.963158,-37.814262,Melbourne,"Intersection of Bourke St and Elizabeth St"
+153.025252,-27.469656,Brisbane,"Intersection of Albert St and Queen St"
+115.856492,-31.954693,Perth,"Centre of Victoria Square"
+138.599946,-34.928625,Adelaide,"Intersection of St Georges Terrace and William St"
+147.328926,-42.882084,Hobart,"Intersection Collins and Elizabeth St"
+149.128692,-35.282044,Canberra,"Centre of City Hill"
+130.841617,-12.463011,Darwin,"Intersection of Smith St and Knuckey St"
