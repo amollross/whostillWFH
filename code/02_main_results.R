@@ -45,7 +45,7 @@ LPManypost <- feols(data = df %>% filter(POST == 1), wfh.any ~
                     vcov = "hetero")
 modelsummary(list("Pre (2017-19)"=LPManypre, "During (2020-21)"=LPManypand, "Post (2022-24)"=LPManypost), 
              stars = T, gof_omit = "AIC|BIC|RMSE", 
-             output = "regression outputs/WFHany LPM output - main.xlsx"
+             output = "WFHany LPM output - main.xlsx"
              )
 
 ### Baseline LPMs for WFHmost
@@ -87,7 +87,7 @@ LPMmostpost <- feols(data = df %>% filter(POST == 1), wfh.most ~
                      vcov = "hetero")
 modelsummary(list("Pre (2017-19)"=LPMmostpre, "During (2020-21)"=LPMmostpand, "Post (2022-24)"=LPMmostpost), 
              stars = T, gof_omit = "AIC|BIC|RMSE", 
-             output = "regression outputs/WFHmost LPM output - main.xlsx"
+             output = "WFHmost LPM output - main.xlsx"
              )
 
 # Main outputs
@@ -97,7 +97,7 @@ rows <- tribble(~"term", ~LPManypre, ~LPManypand, ~LPManypost, ~LPMmostpre, ~LPM
 attr(rows, "position") <- c(1,2)
 modelsummary(list(LPManypre, LPManypand, LPManypost, LPMmostpre, LPMmostpand, LPMmostpost), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/separated LPM output - main.docx"
+             output = "separated LPM output - main.docx"
 )
 
 
@@ -174,7 +174,7 @@ rows <- tribble(~"term", ~LPMany_comb, ~LPMmost_comb,
 attr(rows, "position") <- 1
 modelsummary(list(LPMany_comb, LPMmost_comb), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/combined LPM output.docx"
+             output = "combined LPM output.docx"
 )
 
 # Extra stats for interpretation
@@ -225,7 +225,7 @@ modelplot(list("After (2022-24)"=LPManypost, "During (2020-21)"=LPManypand,
         panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) +
   scale_x_continuous(limits = c(-0.11,0.06), breaks = seq(-0.2,0.2, by = 0.05)) +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHany_age_main_outputs.png", width=9, height=12, units="cm")
+ggsave(paste0(chart_output, "WFHany_age_main_outputs.png"), width=9, height=12, units="cm")
 brewer.pal(9, "Purples")
 modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
                "Before (2017-19)"=LPMmostpre), 
@@ -242,7 +242,7 @@ modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
         axis.title.y = element_blank(), axis.text.y = element_blank()) +
   scale_x_continuous(limits = c(-0.1,0.06), breaks = seq(-0.2,0.2, by = 0.05)) +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHmost_age_main_outputs.png", width=7, height=12, units="cm")
+ggsave(paste0(chart_output, "WFHmost_age_main_outputs.png"), width=7, height=12, units="cm")
 
 ## Occupation fixed effects 
 label.occup <- LPManypre |> 
@@ -268,7 +268,7 @@ modelplot(list("After (2022-24)"=LPManypost, "During (2020-21)"=LPManypand,
         axis.title.y = element_blank()) +
   geom_vline(xintercept = 0, colour = "black") +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHany_occupFE_LPMoutputs.png", width=10.5, height=9.5, units="cm")
+ggsave(paste0(chart_output, "WFHany_occupFE_LPMoutputs.png"), width=10.5, height=9.5, units="cm")
 modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
                "Before (2017-19)"=LPMmostpre),
           coef_map = label.occup) +
@@ -286,7 +286,7 @@ modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
         axis.title.y = element_blank(), axis.text.y = element_blank()) +
   geom_vline(xintercept = 0, colour = "black") +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHmost_occupFE_LPMoutputs.png", width=5.5, height=9.5, units="cm")
+ggsave(paste0(chart_output, "WFHmost_occupFE_LPMoutputs.png"), width=5.5, height=9.5, units="cm")
 
 ## Industry fixed effects
 label.industry <- LPManypre |> 
@@ -312,7 +312,7 @@ modelplot(list("After (2022-24)"=LPManypost, "During (2020-21)"=LPManypand,
         axis.title.y = element_blank()) +
   geom_vline(xintercept = 0, colour = "black") +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHany_industFE_LPMoutputs.png", width=10.5, height=16, units="cm")
+ggsave(paste0(chart_output, "WFHany_industFE_LPMoutputs.png"), width=10.5, height=16, units="cm")
 modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
                "Before (2017-19)"=LPMmostpre),
           coef_map = label.industry) +
@@ -330,7 +330,7 @@ modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
         axis.title.y = element_blank(), axis.text.y = element_blank()) +
   geom_vline(xintercept = 0, colour = "black") +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHmost_industFE_LPMoutputs.png", width=5.5, height=16, units="cm")
+ggsave(paste0(chart_output, "WFHmost_industFE_LPMoutputs.png"), width=5.5, height=16, units="cm")
 
 ## State
 label.state <- c("state::[2] VIC"="VIC",
@@ -355,7 +355,7 @@ modelplot(list("After (2022-24)"=LPManypost, "During (2020-21)"=LPManypand,
         axis.title.y = element_blank()) +
   scale_x_continuous(breaks = seq(-0.4,0.2, by = 0.1)) +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHany_state_outputs.png", width=8.5, height=9.5, units="cm")
+ggsave(paste0(chart_output, "WFHany_state_outputs.png"), width=8.5, height=9.5, units="cm")
 modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
                "Before (2017-19)"=LPMmostpre), 
           coef_map = label.state) +
@@ -371,6 +371,6 @@ modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
         axis.title.y = element_blank(), axis.text.y = element_blank()) +
   scale_x_continuous(breaks = seq(-0.4,0.2, by = 0.1)) +
   guides(colour = guide_legend(nrow = 3, reverse = T))
-ggsave("charts/WFHmost_state_outputs.png", width=7.5, height=9.5, units="cm")
+ggsave(paste0(chart_output, "WFHmost_state_outputs.png"), width=7.5, height=9.5, units="cm")
 
 
