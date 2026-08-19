@@ -323,8 +323,8 @@ age.summ.WFH.pandemic.5yr <- df %>%
                                    "Post-pandemic (2022-2024)" = "Post-pandemic period")) %>%
   group_by(pandemic.cat, age.cat.5yr) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -369,8 +369,8 @@ fem.summ.WFH.pandemic <- df %>%
          female.cat = factor(female, labels = c("Male", "Female"))) %>%
   group_by(pandemic.cat, female, female.cat) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -414,8 +414,8 @@ disab.summ.WFH.pandemic <- df %>%
          disab.cat = factor(disab, labels = c("No disability", "Has a disability"))) %>%
   group_by(pandemic.cat, disab, disab.cat) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -459,8 +459,8 @@ uni.summ.WFH.pandemic <- df %>%
          unieduc.cat = factor(unieduc, labels = c("No degree", "University degree"))) %>%
   group_by(pandemic.cat, unieduc, unieduc.cat) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -504,8 +504,8 @@ marr.summ.WFH.pandemic <- df %>%
          ismarr.cat = factor(ismarr, labels = c("Not married", "Married"))) %>%
   group_by(pandemic.cat, ismarr, ismarr.cat) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -549,8 +549,8 @@ sup.summ.WFH.pandemic <- df %>%
          job.supervise.cat = factor(job.supervise, labels = c("Non-supervisor", "Supervisor"))) %>%
   group_by(pandemic.cat, job.supervise, job.supervise.cat) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -594,8 +594,8 @@ urban.summ.WFH.pandemic <- df %>%
          urban.cat = factor(urban, labels = c("Regional/remote resident", "Major city resident"))) %>%
   group_by(pandemic.cat, urban, urban.cat) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -639,8 +639,8 @@ occ.summ.WFH.pandemic <- df %>%
                                    "Post-pandemic\n(2022-2024)" = "Post-pandemic period")) %>%
   group_by(pandemic.cat, job.occ.1) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
@@ -680,8 +680,8 @@ ind.summ.WFH.pandemic <- df %>%
                                    "Post-pandemic\n(2022-2024)" = "Post-pandemic period")) %>%
   group_by(pandemic.cat, job.ind.1) %>%
   summarise(obs = n(),
-            p.wfh.any = mean(wfh.any=="WFH", na.rm=T),
-            se.wfh.any = sd(wfh.any=="WFH", na.rm=T)/sqrt(obs),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
