@@ -310,7 +310,7 @@ wfhdata <- wfhdata %>%
                                         if_else(wfh.hybrid.high == 1, 2,
                                                 if_else(wfh.fullremote == 1, 3, NA)))),
          wfh.category = factor(wfh.category,
-                               labels = c("Never", "Low hybrid", "High hybrid", "Fully remote"),
+                               labels = c("Never", "Low hybrid", "High hybrid", "Fully remote", NA),
                                exclude = NULL))
 
 
