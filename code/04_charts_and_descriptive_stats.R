@@ -236,7 +236,7 @@ ggplot(summ.stats.WFHmost.year) +
   theme_classic() +
   theme(axis.title.x = element_blank(), legend.position = "bottom",
         axis.text = element_text(colour = "black"),text = element_text(size = 8))
-ggsave(paste0(chart_output, "WSWFH descript charts/WFHmost_year.png"), width = 16, height = 10, units = "cm")
+ggsave(paste0(chart_output, "WFHmost_year.png"), width = 16, height = 10, units = "cm")
 
 # Density plot of WFH rates
 df %>% filter(wfh.any == "WFH") %>%
@@ -251,7 +251,7 @@ df %>% filter(wfh.any == "WFH") %>%
   labs(x = "Usual WFH hours as share of total hours worked (%)", y = "Number of observations") +
   scale_y_continuous(labels = scales::comma) +
   theme(axis.text = element_text(colour = "black"),text = element_text(size = 8))
-ggsave(paste0(chart_output, "WSWFH descript charts/WFHdensity_pandemicera.png"), width = 16, height = 10, units = "cm")
+ggsave(paste0(chart_output, "WFHdensity_pandemicera.png"), width = 16, height = 10, units = "cm")
 df %>% count(wfh.prop ==1, pandemic.cat) #basic summaries of distribution for fully remote
 
 # Sankey diagram
