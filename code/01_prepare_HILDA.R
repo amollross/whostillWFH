@@ -4,16 +4,6 @@
 #### Aaron Mollross ####
 # =============================== #
 
-install.packages('haven'); install.packages('tidyverse'); install.packages('plm'); 
-install.packages('fixest'); install.packages('sf'); install.packages('absmapsdata')
-install.packages('modelsummary'); install.packages('car'); install.packages('broom')
-library(haven); library(tidyverse); library(plm); 
-library(fixest); library(sf); library(absmapsdata)
-library(modelsummary); library(car); library(broom)
-options(scipen = 999)
-
-setwd(output)
-
 #### HILDA COMBINATION CODE ####
 # Melb Institute program for combining longitudinal files, derived from:
 # https://melbourneinstitute.unimelb.edu.au/hilda/for-data-users/program-library
