@@ -8,8 +8,8 @@
 #### USER TO EDIT ####
 hilda_data <- "location/" # Folder location where combined data from HILDA wave 24 (restricted release) is located
 
-output <- "location/" # Desired location for outputs
-
+output <- "location/" # Desired location for data and regression outputs
+chart_output <- "location/" # Desired location for chart outputs
 
 #### GITHUB SOURCE ####
 base_url <- "https://raw.githubusercontent.com/amollross/whostillWFH/main/" 
