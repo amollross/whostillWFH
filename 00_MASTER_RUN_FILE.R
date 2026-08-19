@@ -17,10 +17,12 @@ base_url <- "https://raw.githubusercontent.com/amollross/whostillWFH/main/"
 
 
 #### SET-UP ####
-install.packages('haven'); install.packages('tidyverse'); install.packages('plm'); install.packages('RColorBrewer'); install.packages('fixest'); 
-install.packages('sf'); install.packages('absmapsdata'); install.packages('modelsummary'); install.packages('car'); install.packages('broom')
-library(haven); library(tidyverse); library(plm); library(RColorBrewer); library(fixest); 
-library(sf); library(absmapsdata); library(modelsummary); library(car); library(broom)
+install.packages('haven'); install.packages('tidyverse'); install.packages('plm'); install.packages('RColorBrewer') 
+install.packages('fixest'); install.packages('sf'); install.packages('absmapsdata'); install.packages('modelsummary') 
+install.packages('car'); install.packages('broom'); install.packages('networkD3'); install.packages('estimatr')
+library(haven); library(tidyverse); library(plm); library(RColorBrewer) 
+library(fixest); library(sf); library(absmapsdata); library(modelsummary) 
+library(car); library(broom); library(networkD3); library(estimatr)
 options(scipen = 999)
 
 setwd(output)
