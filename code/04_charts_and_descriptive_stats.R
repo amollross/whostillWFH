@@ -239,7 +239,7 @@ ggplot(summ.stats.WFHmost.year) +
 ggsave(paste0(chart_output, "WFHmost_year.png"), width = 16, height = 10, units = "cm")
 
 # Density plot of WFH rates
-df %>% filter(wfh.any == "WFH") %>%
+df %>% filter(wfh.any == 1) %>%
   mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic (2017-2019)" = "Pre-pandemic period",
                                    "Pandemic (2020-2021)" = "Pandemic period",
