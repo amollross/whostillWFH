@@ -86,7 +86,7 @@ rows <- tribble(~"term", ~LPManypre_male, ~LPManypand_male, ~LPManypost_male, ~L
 attr(rows, "position") <- c(1,2)
 modelsummary(list(LPManypre_male, LPManypand_male, LPManypost_male, LPManypre_female, LPManypand_female, LPManypost_female), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/separated WFHany output - gender split.docx")
+             output = "separated WFHany output - gender split.docx")
 
 # Male LPMs for WFHmost
 LPMmostpre_male <- feols(data = df %>% filter(PRE == 1, female == 0), wfh.most ~ 
@@ -165,7 +165,7 @@ rows <- tribble(~"term", ~LPMmostpre_male, ~LPMmostpand_male, ~LPMmostpost_male,
 attr(rows, "position") <- c(1,2)
 modelsummary(list(LPMmostpre_male, LPMmostpand_male, LPMmostpost_male, LPMmostpre_female, LPMmostpand_female, LPMmostpost_female), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/separated WFHmost output - gender split.docx")
+             output = "separated WFHmost output - gender split.docx")
 
 
 ### Disability splits
@@ -240,7 +240,7 @@ rows <- tribble(~"term", ~LPManypre_nondisab, ~LPManypand_nondisab, ~LPManypost_
 attr(rows, "position") <- c(1,2)
 modelsummary(list(LPManypre_nondisab, LPManypand_nondisab, LPManypost_nondisab, LPManypre_disab, LPManypand_disab, LPManypost_disab), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/separated WFHany output - disability split.docx")
+             output = "separated WFHany output - disability split.docx")
 
 # Non-disab LPMs for WFHmost
 LPMmostpre_nondisab <- feols(data = df %>% filter(PRE == 1, disab == 0), wfh.most ~ 
@@ -313,7 +313,7 @@ rows <- tribble(~"term", ~LPMmostpre_nondisab, ~LPMmostpand_nondisab, ~LPMmostpo
 attr(rows, "position") <- c(1,2)
 modelsummary(list(LPMmostpre_nondisab, LPMmostpand_nondisab, LPMmostpost_nondisab, LPMmostpre_disab, LPMmostpand_disab, LPMmostpost_disab), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/separated WFHmost output - disability split.docx")
+             output = "separated WFHmost output - disability split.docx")
 
 
 
@@ -399,7 +399,7 @@ rows <- tribble(~"term", ~LPMany_comb_indFE, ~LPMmost_comb_indFE,
 attr(rows, "position") <- 1
 modelsummary(list(LPMany_comb_indFE, LPMmost_comb_indFE), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/combined LPM output - indiv FE.docx")
+             output = "combined LPM output - indiv FE.docx")
 
 # Check for individuals with no change in outcome (absorbed by FE)
 no_change <- df %>%
@@ -514,7 +514,7 @@ rows <- tribble(~"term", ~LOGanypre, ~LOGanypand, ~LOGanypost, ~LOGmostpre, ~LOG
 attr(rows, "position") <- 1
 modelsummary(list(LOGanypre, LOGanypand, LOGanypost, LOGmostpre, LOGmostpand, LOGmostpost), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL, exponentiate = T,
-             output = "regression outputs/separated LOGIT output - appendix.docx")
+             output = "separated LOGIT output - appendix.docx")
 
 
 
@@ -579,7 +579,7 @@ OLSsharepost <- df %>%
         vcov = "hetero")
 modelsummary(list(OLSsharepre, OLSsharepand, OLSsharepost), 
              stars = T, gof_omit = "AIC|BIC|RMSE", statistic = NULL,
-             output = "regression outputs/separated OLS output - WFHprop.docx")
+             output = "separated OLS output - WFHprop.docx")
 df %>% 
   filter(wfh.any == 1) %>% 
   summarise(mean=mean(wfh.prop, na.rm = T), 
@@ -683,6 +683,6 @@ label.firmsize <- tibble(emplyr.size = label.emplyrsize,
   deframe()
 modelsummary(list(LPManypre_firmsize, LPManypand_firmsize, LPManypost_firmsize, LPMmostpre_firmsize, LPMmostpand_firmsize, LPMmostpost_firmsize), 
              stars = T, gof_omit = "R2 Within|AIC|BIC|RMSE", add_rows = rows, statistic = NULL,
-             output = "regression outputs/separated LPM output - firm size robustness.docx",
+             output = "separated LPM output - firm size robustness.docx",
              coef_map = label.firmsize)
 
