@@ -5,37 +5,7 @@
 # =============================== #
 
 
-#### SUPPORTING CHARTS AND SUMMARY STATISTICS - APPENDIX A ####
-
-# Missing job distance data comparison
-my_vars <- c("wfh.any", "wfh.prop", "job.uslhrs", "age", "unieduc", "female","child.resid", "child.yngst",
-             "disab", "disab.type.cogni", "wage.mn", "earns.tot", "lfs.emp.ft", "job.tenure", "job.supervise", 
-             "DNscore_manual", "home.bdrooms", "urban", "innr.region", "dist.nearstcity")
-wfhdata.travel <- wfhdata.employees %>%
-  filter(year >= 2017,
-         age >=15,
-         age <=69) %>%
-  mutate(job.dist.na = if_else(is.na(job.dist), 1, 0),
-         job.dist.na = factor(job.dist.na, labels = c("Not missing", "Missing")),
-         wfh.any = if_else(wfh.any=="WFH",1,0), # recode wfh.any
-         pandemic.cat = fct_recode(pandemic.cat,
-                                   "Pre-pandemic (2017-2019)" = "Pre-pandemic period",
-                                   "Pandemic (2020-2021)" = "Pandemic period",
-                                   "Post-pandemic (2022-2024)" = "Post-pandemic period"))
-wfhdata.travel <- wfhdata.travel %>%
-  select(all_of(my_vars), job.dist.na)  %>%    
-  mutate(across(where(haven::is.labelled), haven::zap_label),
-         across(where(haven::is.labelled), haven::zap_labels))
-datasummary_balance(data = wfhdata.travel,
-                    wfh.any + wfh.prop + job.uslhrs + age + unieduc + female + child.resid + child.yngst +
-                      disab + disab.type.cogni + wage.mn + earns.tot + lfs.emp.ft + job.tenure + job.supervise + 
-                      DNscore_manual + home.bdrooms + urban + innr.region + dist.nearstcity 
-                    ~ job.dist.na,
-                    fmt = 3,
-                    dinm = T,
-                    dinm_statistic = "p.value",
-                    output = "missing jobdist summary stats.xlsx"
-)   
+#### SUPPORTING MATERIALS - APPENDIX A ####
 
 # Occupation teleworkability v WFH uptake scatter plot
 occup.scatter <- df %>%
@@ -73,47 +43,126 @@ ggplot(occup.scatter %>% filter(pandemic.cat != "Pandemic (2020-2021)")) +
         legend.position = "none") 
 ggsave(paste0(chart_output, "occup_WFH_x_DNscore.png"), width = 16, height = 9.8, units = "cm")
 
-# Job distance v distance to nearest city centre scatter plot
-dist.scatter <- df %>%
-  mutate(pandemic.cat = fct_recode(pandemic.cat,
-                                   "Pre-pandemic (2017-2019)" = "Pre-pandemic period",
-                                   "Pandemic (2020-2021)" = "Pandemic period",
-                                   "Post-pandemic (2022-2024)" = "Post-pandemic period"),
-         citydist.centile = ntile(dist.nearstcity, 100)) %>%
-  group_by(pandemic.cat, citydist.centile) %>%
-  summarise(
-    mean_citydist = mean(10*dist.nearstcity),
-    mean_jobdist = mean(10*job.dist),
-    med_citydist = median(10*dist.nearstcity),
-    med_jobdist = median(10*job.dist),
-    .groups = "drop")
+# Age coefficients
+label.age <- c("age.cat.5yr::< 21"="Under 21",
+               "age.cat.5yr::21-25"="21-25",
+               "age.cat.5yr::26-30"="26-30",
+               "age.cat.5yr::31-35"="31-35",
+               "age.cat.5yr::36-40"="36-40",
+               "age.cat.5yr::46-50"="46-50",
+               "age.cat.5yr::51-55"="51-55",
+               "age.cat.5yr::56-60"="56-60",
+               "age.cat.5yr::61-65"="61-64")
+brewer.pal(9, "Greens")
+modelplot(list("After (2022-24)"=LPManypost, "During (2020-21)"=LPManypand,
+               "Before (2017-19)"=LPManypre),
+          coef_map = label.age) +
+  labs(y = "Age category", colour = "Pandemic period", x = "Coeff. estimates (with 95% CI)") +
+  geom_vline(xintercept = 0, colour = "black") +
+  scale_colour_manual(values = c("#74C476","#238B45","#00441B")) +
+  theme_classic() +
+  scale_y_discrete(limits = rev) +
+  theme(legend.position = "right",  text = element_text(size = 8),
+        axis.text = element_text(colour = "black"),
+        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) +
+  scale_x_continuous(limits = c(-0.15,0.06), breaks = seq(-0.2,0.2, by = 0.05)) +
+  guides(colour = guide_legend(nrow = 3, reverse = T))
+ggsave(paste0(chart_output, "WFHany_age_main_outputs.png"), width=16, height=8, units="cm")
+brewer.pal(9, "Purples")
+modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
+               "Before (2017-19)"=LPMmostpre), 
+          coef_map = label.age) +
+  labs(title = "WFHmost", y = "Age category",
+       colour = "Pandemic period", x = "Coeff. estimates (with 95% CI)") +
+  geom_vline(xintercept = 0, colour = "black") +
+  scale_colour_manual(values = c("#9E9AC8", "#6A51A3FF","#3F007DFF")) +
+  theme_classic() +
+  scale_y_discrete(limits = rev) +
+  theme(legend.position = "bottom", text = element_text(size = 7.5), 
+        axis.text = element_text(colour = "black"), legend.title = element_blank(),
+        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey"),
+        axis.title.y = element_blank(), axis.text.y = element_blank()) +
+  scale_x_continuous(limits = c(-0.1,0.06), breaks = seq(-0.2,0.2, by = 0.05)) +
+  guides(colour = guide_legend(nrow = 3, reverse = T))
+ggsave(paste0(chart_output, "WFHmost_age_main_outputs.png"), width=7, height=12, units="cm")
 
-r2_dist.mean <- dist.scatter %>%
-  filter(pandemic.cat != "Pandemic (2020-2021)") %>%
-  group_by(pandemic.cat) %>%
-  do(glance(lm(mean_jobdist ~ mean_citydist, data = .))) %>%
-  select(pandemic.cat, r.squared) %>%
-  ungroup() %>%
-  rename(r2 = r.squared) %>%
-  mutate(
-    x = c(760, 600),
-    y = c(45, 42),
-    label = paste0("R² = ", round(r2, 3)))
+# State (WFHmost)
+label.state <- c("state::[2] VIC"="Victoria",
+                 "state::[3] QLD"="Queensland",
+                 "state::[4] SA"="South Ausralia",
+                 "state::[5] WA"="Western Australia",
+                 "state::[6] TAS"="Tasmania",
+                 "state::[7] NT"="Northern Territory",
+                 "state::[8] ACT"="Australian Capital Territory")
+modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
+               "Before (2017-19)"=LPMmostpre), 
+          coef_map = label.state) +
+  labs(#title = "WFHmost", 
+    y = "State", colour = "Pandemic period", x = "Coeff. estimates (with 95% CI)") +
+  geom_vline(xintercept = 0, colour = "black") +
+  scale_colour_manual(values = c("#9E9AC8", "#6A51A3FF","#3F007DFF")) +
+  theme_classic() +
+  scale_y_discrete(limits = rev) +
+  theme(legend.position = "right", text = element_text(size = 8), 
+        axis.text = element_text(colour = "black"), #legend.title = element_blank(),
+        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey"),
+        #axis.title.y = element_blank(), #axis.text.y = element_blank()
+  ) +
+  scale_x_continuous(breaks = seq(-0.4,0.2, by = 0.05)) +
+  guides(colour = guide_legend(nrow = 3, reverse = T))
+ggsave(paste0(chart_output, "WFHmost_state_outputs.png"), width=16, height=7, units="cm")
 
-ggplot(dist.scatter %>% filter(pandemic.cat != "Pandemic (2020-2021)")) +
-  geom_point(aes(y = mean_jobdist, x = mean_citydist, colour = pandemic.cat)) +
-  geom_smooth(aes(y = mean_jobdist, x = mean_citydist), colour = "black",
-              formula = y~poly(x,1), method = "glm", se = F) +
-  labs(x = "Mean distance to nearest city centre (km)",
-       y = "Mean distance to work (km)") +
-  facet_grid(cols = vars(pandemic.cat)) +
-  geom_text(data = r2_dist.mean, aes(x = x, y = y, label = label), 
-            size = 2.8, fontface = "bold", hjust = 0) +
-  scale_colour_manual(values = c("#6BAED6FF", "#08306BFF")) +
-  theme_bw() +
-  theme(axis.text = element_text(colour = "black"), text = element_text(size =9),
-        legend.position = "none") 
-ggsave(paste0(chart_output, "dist_work_x_city.png"), width = 16, height = 9, units = "cm")
+# Occupation fixed effects (WFHmost)
+label.occup <- LPManypre |> 
+  tidy(conf.int = TRUE) |>                 
+  filter(str_detect(term, "^job.occ.1")) |>
+  select(term) |>
+  mutate(occup = str_remove(term, "^job.occ.1::")) |>
+  deframe()
+modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
+               "Before (2017-19)"=LPMmostpre),
+          coef_map = label.occup) +
+  labs(y = "Occupation", 
+       x = "Coeff. estimates (with 95% CI)",
+       colour = "Pandemic period") +
+  scale_y_discrete(limits = rev) +
+  scale_x_continuous(limits = c(-0.12, 0.07), breaks = seq(-1,1, by = 0.05)) +
+  scale_colour_manual(values = c("#9E9AC8", "#6A51A3FF","#3F007DFF")) +
+  theme_classic() +
+  theme(legend.position = "right", text = element_text(size = 8), 
+        axis.text = element_text(colour = "black"), #legend.title = element_blank(),
+        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey"),
+        #axis.title.y = element_blank(), axis.text.y = element_blank()
+        ) +
+  geom_vline(xintercept = 0, colour = "black") +
+  guides(colour = guide_legend(nrow = 3, reverse = T))
+ggsave(paste0(chart_output, "WFHmost_occupFE_LPMoutputs.png"), width=16, height=7, units="cm")
+
+# Industry fixed effects (WFHmost)
+label.industry <- LPManypre |> 
+  tidy(conf.int = TRUE) |>                 
+  filter(str_detect(term, "^job.ind.1")) |>
+  select(term) |>
+  mutate(industry = str_remove(term, "^job.ind.1::")) |>
+  deframe()
+modelplot(list("After (2022-24)"=LPMmostpost, "During (2020-21)"=LPMmostpand,
+               "Before (2017-19)"=LPMmostpre),
+          coef_map = label.industry) +
+  labs(y = "Industry", 
+       x = "Coeff. estimates (with 95% CI)",
+       colour = "Pandemic period") +
+  scale_y_discrete(limits = rev) +
+  scale_x_continuous(limits = c(-0.15, 0.45), breaks = seq(-1,1, by = 0.1)) +
+  scale_colour_manual(values = c("#9E9AC8", "#6A51A3FF","#3F007DFF")) +
+  theme_classic() +
+  theme(legend.position = "right", text = element_text(size = 8), 
+        axis.text = element_text(colour = "black"), #legend.title = element_blank(),
+        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey"),
+        #axis.title.y = element_blank(), axis.text.y = element_blank()
+        ) +
+  geom_vline(xintercept = 0, colour = "black") +
+  guides(colour = guide_legend(nrow = 3, reverse = T))
+ggsave(paste0(chart_output, "WFHmost_industFE_LPMoutputs.png"), width=16, height=12, units="cm")
 
 
 
@@ -147,14 +196,10 @@ summ.stats.WFHany.pandemic <- df %>%
             job.supervise = mean(job.supervise, na.rm = T),
             job.distance = mean(job.dist, na.rm = T),
             telework = mean(DNscore_manual),
-            life.satisfact = mean(satisfact.life, na.rm = T),
-            job.satisfact = mean(jobsat.ovrall, na.rm = T),
-            home.satisfact = mean(satisfact.home),
             bedrooms = mean(home.bdrooms, na.rm = T),
             urban = mean(urban, na.rm = T),
             inner.regional = mean(innr.region, na.rm = T),
             dist.city = mean(dist.nearstcity, na.rm = T),
-            bedrooms.pp = mean(home.bdrooms.pp, na.rm = T),
             .groups = "drop")%>%
   ungroup() %>%
   group_by(pandemic.cat) %>%
@@ -165,8 +210,13 @@ temp <- summ.stats.WFHany.pandemic %>%
   pivot_longer(cols = -c(pandemic.cat, wfh.any), names_to = "Variable", values_to = "Value") %>%
   pivot_wider(names_from = c(pandemic.cat, wfh.any), values_from = Value, names_sep = ", ")
 write.csv(temp, "summ stats by WFHany + pand period.csv", row.names = F)
-summ.stats.WFHany.pandemic %>% group_by(wfh.any) %>% summarise(sum = sum(obs)) # counts by WFH status
-df %>% filter(wfh.any == "WFH") %>% summarise(mean = mean(wfh.prop)) # mean prop of hours WFH, conditional on WFH
+df %>% count(wfh.any) # counts by WFH status
+df %>% summarise(sum.any = sum(wfh.any == 1),
+                 sum = n()) %>%
+  mutate(share.any = 100*sum.any/sum,
+         share.none = 100-share.any)
+df %>% group_by(pandemic.cat) %>% summarise(mean = 100*mean(wfh.any, na.rm = T)) # share with WFH hours
+df %>% filter(wfh.any == 1) %>% summarise(mean = mean(wfh.prop, na.rm = T)) # mean prop of hours WFH, conditional on WFH
 
 # Summary of means by WFHmost status and pandemic period
 summ.stats.WFHmost.pandemic <- df %>%
@@ -196,14 +246,10 @@ summ.stats.WFHmost.pandemic <- df %>%
             job.supervise = mean(job.supervise, na.rm = T),
             job.distance = mean(job.dist, na.rm = T),
             telework = mean(DNscore_manual),
-            life.satisfact = mean(satisfact.life, na.rm = T),
-            job.satisfact = mean(jobsat.ovrall, na.rm = T),
-            home.satisfact = mean(satisfact.home),
             bedrooms = mean(home.bdrooms, na.rm = T),
             urban = mean(urban, na.rm = T),
             inner.regional = mean(innr.region, na.rm = T),
             dist.city = mean(dist.nearstcity, na.rm = T),
-            bedrooms.pp = mean(home.bdrooms.pp, na.rm = T),
             .groups = "drop")%>%
   ungroup() %>%
   group_by(pandemic.cat) %>%
@@ -214,6 +260,10 @@ temp <- summ.stats.WFHmost.pandemic %>%
   pivot_longer(-c(pandemic.cat, wfh.most), names_to = "Variable", values_to = "Value") %>%
   pivot_wider(names_from = c(pandemic.cat, wfh.most), values_from = Value, names_sep = ", ")
 write.csv(temp, "summ stats by WFHmost + pand period.csv", row.names = F)
+df %>% group_by(pandemic.cat) %>% summarise(mean = 100*mean(wfh.most, na.rm = T)) # share with majority WFH hours
+df %>% group_by(pandemic.cat) %>% summarise(fully_remote = 100*mean(wfh.prop == 1, na.rm = T)) # share with 100% WFH
+df %>% filter(wfh.any == 1) %>% group_by(pandemic.cat) %>% 
+  summarise(fully_remote = 100*mean(wfh.prop == 1, na.rm = T)) # share with 100% WFH as proportion of home-workers
 
 # Summary of averages against demographic and job details, split by any WFH and pandemic category
 summ.stats.WFHmost.year <- df %>%
@@ -254,294 +304,99 @@ df %>% filter(wfh.any == 1) %>%
 ggsave(paste0(chart_output, "WFHdensity_pandemicera.png"), width = 16, height = 10, units = "cm")
 df %>% count(wfh.prop ==1, pandemic.cat) #basic summaries of distribution for fully remote
 
-# Sankey diagram
-sec_years <- c(2019,2021,2023)
-# Summarise the transitions for every second year
-transition.sec <- df %>%
-  mutate(wfh.category.yr = paste(wfh.category, year, sep = " ")) %>% # adding a new var to distinguish categories over time
-  filter(year %in% sec_years) %>% # filter for sec_years data only
-  arrange(xwaveid, year) %>%
-  group_by(xwaveid) %>%
-  filter(all(sec_years %in% year)) %>% # filter out observations that do not cover the full period
-  mutate(next.wfh.category = dplyr::lead(wfh.category.yr)) %>% 
-  filter(!is.na(next.wfh.category)) %>%
-  ungroup() %>%
-  count(wfh.category.yr, next.wfh.category, name = "Count")
-# Build prepared sankey dataset
-nodes <- data.frame(name = unique(c(transition.sec$wfh.category.yr, transition.sec$next.wfh.category))) ## edit for relevant dataset ##
-links <- transition.sec %>% ## edit for relevant dataset ##
-  mutate(source = match(wfh.category.yr, nodes$name) - 1,
-         target = match(next.wfh.category, nodes$name) - 1) %>%
-  select(source, target, value = Count)
-# Build custom colour scale to align with palettes in desc stats
-# from the MapPalettes::Bruiser palette: https://github.com/disarm-platform/MapPalettes/blob/master/R/mappalettes_function.R
-base.colors <- c(
-  "Never" = "#1E313E",
-  "Low hybrid" = "#43435A", 
-  "High hybrid" = "#725370",
-  "Fully remote" = "#A4607C") 
-nodes <- nodes %>%
-  mutate(base.category = gsub(" \\d+$", "", name)) %>% # Remove year suffix
-  mutate(color = base.colors[base.category]) # Assign colors based on the base.category
-colourScale <- paste0(
-  'd3.scaleOrdinal()',
-  '.domain(["', paste(unique(nodes$base.category), collapse = '", "'), '"])',
-  '.range(["', paste(unique(nodes$color), collapse = '", "'), '"])') # Define a colourScale using the nodes color column
-# Create sankey diagram
-sankeyNetwork(
-  Links = links,
-  Nodes = nodes,
-  Source = "source",
-  Target = "target",
-  Value = "value",
-  NodeID = "name",
-  units = "Transitions",
-  fontSize = 18,
-  fontFamily = "Calibri",
-  nodeWidth = 50,
-  colourScale = colourScale)
-# Check on quantity figures using Never as baseline (transition.sec df only)
-transition.sec %>% 
-  summarise(never19 = sum(Count[wfh.category.yr == "Never 2019"], na.rm=T),
-            never21 = sum(Count[wfh.category.yr == "Never 2021"], na.rm=T),
-            never23 = sum(Count[next.wfh.category == "Never 2023"], na.rm=T))
-df %>%
-  group_by(xwaveid) %>%
-  filter(all(sec_years %in% year)) %>%
-  ungroup() %>%
-  count(wfh.category=="Never" & year==2019,
-        wfh.category=="Never" & year==2021,
-        wfh.category=="Never" & year==2023)
-# Clean the environment
-rm(list = c("links","nodes","transition.sec","base.colors","colourScale","sec_years"))
-
-# Age summary stats (5yr bins)
-age.summ.WFH.pandemic.5yr <- df %>%  
-  mutate(pandemic.cat = fct_recode(pandemic.cat,
-                                   "Pre-pandemic (2017-2019)" = "Pre-pandemic period",
-                                   "Pandemic (2020-2021)" = "Pandemic period",
-                                   "Post-pandemic (2022-2024)" = "Post-pandemic period")) %>%
-  group_by(pandemic.cat, age.cat.5yr) %>%
-  summarise(obs = n(),
-            p.wfh.any = mean(wfh.any==1, na.rm=T),
-            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
-            p.wfh.most = mean(wfh.most==1, na.rm=T),
-            se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
-            .groups = "drop")
-ggplot(age.summ.WFH.pandemic.5yr) + # Chart prop WFHany by age (5 yr bins)
-  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=age.cat.5yr), 
-           colour = "black", position = position_dodge()) +
-  geom_errorbar(aes(ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax=100*(p.wfh.any+1.96*se.wfh.any), x = pandemic.cat, colour = age.cat.5yr), 
-                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
-  theme_classic() +
-  labs(y="Proportion with any usual WFH (%)", fill = "Age category") +
-  scale_fill_paletteer_d(palette = "ggsci::green_material", direction = -1) +
-  scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray"), 
-                     guide = "none") +
-  theme(legend.position = "bottom", legend.direction = "horizontal", axis.title.x = element_blank(), 
-        text = element_text(size = 8), axis.text = element_text(colour = "black")) +
-  guides(fill = guide_legend(nrow = 2, byrow = TRUE)) +
-  scale_y_continuous(limits = c(0, 50), breaks = seq(0, 50, by = 10)) 
-ggsave(paste0(chart_output, "age5yr_pandemicera_wfhany.png"), width = 16, height = 8, units = "cm")
-ggplot(age.summ.WFH.pandemic.5yr) + # Chart mean WFHmost by age (5 yr bins)
-  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=age.cat.5yr), 
-           colour = "black", position = position_dodge()) +
-  geom_errorbar(aes(ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax=100*(p.wfh.most+1.96*se.wfh.most), 
-                    x = pandemic.cat, colour = age.cat.5yr), 
-                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
-  theme_classic() +
-  labs(y="Proportion with majority WFH hours (%)", fill = "Age category") +
-  scale_fill_paletteer_d(palette = "ggsci::purple_material", direction = -1) +
-  scale_color_manual(values = c("darkgray", "darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray","darkgray"), 
-                     guide = "none") +
-  theme(legend.position = "bottom", legend.direction = "horizontal", axis.title.x = element_blank(), 
-        text = element_text(size = 8), axis.text = element_text(colour = "black")) +
-  guides(fill = guide_legend(nrow = 2, byrow = TRUE)) +
-  scale_y_continuous(limits = c(0, 35), breaks = seq(0, 70, by = 5)) 
-ggsave(paste0(chart_output, "age5yr_pandemicera_wfhmost.png"), width = 16, height = 8, units = "cm")
-
-# Gender summary stats
-fem.summ.WFH.pandemic <- df %>%  
+### Part-time summary stats ###
+summ.WFH.pandemic <- df %>%  
   mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
                                    "Pandemic\n(2020-2021)" = "Pandemic period",
                                    "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
-         female.cat = factor(female, labels = c("Male", "Female"))) %>%
-  group_by(pandemic.cat, female, female.cat) %>%
+         part.time.cat = factor(lfs.emp.pt, labels = c("Full-time", "Part-time"))) %>%
+  group_by(pandemic.cat, lfs.emp.pt, part.time.cat) %>%
   summarise(obs = n(),
             p.wfh.any = mean(wfh.any==1, na.rm=T),
             se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
-ggplot(fem.summ.WFH.pandemic) + # Chart prop WFHany by female
-  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=female.cat), 
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by lfs.emp.pt
+  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=part.time.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
-                    colour = female.cat),
+                    colour = part.time.cat),
                 position = position_dodge(width = 0.9), width = 0.3, size = 1) +
   theme_classic() +
   labs(y="Proportion with any usual WFH (%)", x="", fill = "") +
   scale_fill_manual(values = c("#238B45FF","#00441BFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,45), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "female_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
-ggplot(fem.summ.WFH.pandemic) + # Chart prop WFHmost by female
-  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=female.cat), 
+ggsave(paste0(chart_output, "parttime_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by lfs.emp.pt
+  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=part.time.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
-                    colour = female.cat),
+                    colour = part.time.cat),
                 position = position_dodge(width = 0.9), width = 0.3, size = 1) +
   theme_classic() +
   labs(y="Proportion with majority WFH hours (%)", x="", fill = "") +
   scale_fill_manual(values = c("#6A51A3FF","#3F007DFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "female_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "parttime_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
-# Disability summary stats
-disab.summ.WFH.pandemic <- df %>% 
+### Casual summary stats ###
+summ.WFH.pandemic <- df %>%  
   mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
                                    "Pandemic\n(2020-2021)" = "Pandemic period",
                                    "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
-         disab.cat = factor(disab, labels = c("No disability", "Has a disability"))) %>%
-  group_by(pandemic.cat, disab, disab.cat) %>%
+         casual.cat = factor(job.casual, labels = c("Permanent", "Casual"))) %>%
+  group_by(pandemic.cat, job.casual, casual.cat) %>%
   summarise(obs = n(),
             p.wfh.any = mean(wfh.any==1, na.rm=T),
             se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
-            .groups = "drop")
-ggplot(disab.summ.WFH.pandemic) + # Chart prop WFHany by disab
-  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=disab.cat), 
+            .groups = "drop") %>%
+  filter(!is.na(job.casual))
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by job.casual
+  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=casual.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
-                    colour = disab.cat),
+                    colour = casual.cat),
                 position = position_dodge(width = 0.9), width = 0.3, size = 1) +
   theme_classic() +
   labs(y="Proportion with any usual WFH (%)", x="", fill = "") +
   scale_fill_manual(values = c("#238B45FF","#00441BFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,45), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "disab_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
-ggplot(disab.summ.WFH.pandemic) + # Chart prop WFHmost by disab
-  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=disab.cat), 
+ggsave(paste0(chart_output, "casual_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by job.casual
+  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=casual.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
-                    colour = disab.cat),
+                    colour = casual.cat),
                 position = position_dodge(width = 0.9), width = 0.3, size = 1) +
   theme_classic() +
   labs(y="Proportion with majority WFH hours (%)", x="", fill = "") +
   scale_fill_manual(values = c("#6A51A3FF","#3F007DFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "disab_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
+ggsave(paste0(chart_output, "casual_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
-# Education summary stats
-uni.summ.WFH.pandemic <- df %>%  
-  mutate(pandemic.cat = fct_recode(pandemic.cat,
-                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
-                                   "Pandemic\n(2020-2021)" = "Pandemic period",
-                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
-         unieduc.cat = factor(unieduc, labels = c("No degree", "University degree"))) %>%
-  group_by(pandemic.cat, unieduc, unieduc.cat) %>%
-  summarise(obs = n(),
-            p.wfh.any = mean(wfh.any==1, na.rm=T),
-            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
-            p.wfh.most = mean(wfh.most==1, na.rm=T),
-            se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
-            .groups = "drop")
-ggplot(uni.summ.WFH.pandemic) + # Chart prop WFHany by unieduc
-  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=unieduc.cat), 
-           position = position_dodge(), colour = "black") +
-  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
-                    colour = unieduc.cat),
-                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
-  theme_classic() +
-  labs(y="Proportion with any usual WFH (%)", x="", fill = "") +
-  scale_fill_manual(values = c("#238B45FF","#00441BFF")) +
-  scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
-                     guide = "none") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
-  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
-        text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "unieduc_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
-ggplot(uni.summ.WFH.pandemic) + # Chart prop WFHmost by unieduc
-  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=unieduc.cat), 
-           position = position_dodge(), colour = "black") +
-  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
-                    colour = unieduc.cat),
-                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
-  theme_classic() +
-  labs(y="Proportion with majority WFH hours (%)", x="", fill = "") +
-  scale_fill_manual(values = c("#6A51A3FF","#3F007DFF")) +
-  scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
-                     guide = "none") +
-  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
-  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
-        text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "unieduc_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
-
-# Married summary stats
-marr.summ.WFH.pandemic <- df %>%  
-  mutate(pandemic.cat = fct_recode(pandemic.cat,
-                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
-                                   "Pandemic\n(2020-2021)" = "Pandemic period",
-                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
-         ismarr.cat = factor(ismarr, labels = c("Not married", "Married"))) %>%
-  group_by(pandemic.cat, ismarr, ismarr.cat) %>%
-  summarise(obs = n(),
-            p.wfh.any = mean(wfh.any==1, na.rm=T),
-            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
-            p.wfh.most = mean(wfh.most==1, na.rm=T),
-            se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
-            .groups = "drop")
-ggplot(marr.summ.WFH.pandemic) + # Chart prop WFHany by ismarr
-  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=ismarr.cat), 
-           position = position_dodge(), colour = "black") +
-  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
-                    colour = ismarr.cat),
-                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
-  theme_classic() +
-  labs(y="Proportion with any usual WFH (%)", x="", fill = "") +
-  scale_fill_manual(values = c("#238B45FF","#00441BFF")) +
-  scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
-                     guide = "none") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
-  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
-        text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "marr_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
-ggplot(marr.summ.WFH.pandemic) + # Chart prop WFHmost by marr
-  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=ismarr.cat), 
-           position = position_dodge(), colour = "black") +
-  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
-                    colour = ismarr.cat),
-                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
-  theme_classic() +
-  labs(y="Proportion with majority WFH hours (%)", x="", fill = "") +
-  scale_fill_manual(values = c("#6A51A3FF","#3F007DFF")) +
-  scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
-                     guide = "none") +
-  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
-  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
-        text = element_text(size = 8), axis.title.x = element_blank()) 
-ggsave(paste0(chart_output, "marr_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
-
-# Supervisor summary stats
-sup.summ.WFH.pandemic <- df %>%  
+### Supervisor summary stats ###
+summ.WFH.pandemic <- df %>%  
   mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
                                    "Pandemic\n(2020-2021)" = "Pandemic period",
@@ -554,7 +409,7 @@ sup.summ.WFH.pandemic <- df %>%
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
-ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHany by job.supervise
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by job.supervise
   geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=job.supervise.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
@@ -565,11 +420,11 @@ ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHany by job.supervise
   scale_fill_manual(values = c("#238B45FF","#00441BFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,45), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
 ggsave(paste0(chart_output, "superv_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
-ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHmost by job.supervise
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by job.supervise
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=job.supervise.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
@@ -580,13 +435,13 @@ ggplot(sup.summ.WFH.pandemic) + # Chart prop WFHmost by job.supervise
   scale_fill_manual(values = c("#6A51A3FF","#3F007DFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
 ggsave(paste0(chart_output, "superv_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
-# Urban summary stats
-urban.summ.WFH.pandemic <- df %>%  
+### Urban summary stats ###
+summ.WFH.pandemic <- df %>%  
   mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
                                    "Pandemic\n(2020-2021)" = "Pandemic period",
@@ -599,7 +454,7 @@ urban.summ.WFH.pandemic <- df %>%
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
-ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHany by urban
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by urban
   geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=urban.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
@@ -610,11 +465,11 @@ ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHany by urban
   scale_fill_manual(values = c("#238B45FF","#00441BFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,55), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,45), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
 ggsave(paste0(chart_output, "urban_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
-ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHmost by urban
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by urban
   geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=urban.cat), 
            position = position_dodge(), colour = "black") +
   geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
@@ -625,89 +480,308 @@ ggplot(urban.summ.WFH.pandemic) + # Chart prop WFHmost by urban
   scale_fill_manual(values = c("#6A51A3FF","#3F007DFF")) +
   scale_color_manual(values = c("darkgray", "darkgray","darkgray","darkgray","darkgray","darkgray"), 
                      guide = "none") +
-  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,10)) +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0,60,10)) +
   theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
         text = element_text(size = 8), axis.title.x = element_blank()) 
 ggsave(paste0(chart_output, "urban_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
 
-# Occupation summary stats
-occ.summ.WFH.pandemic <- df %>% 
-  mutate(job.occ.1 = fct_na_value_to_level(job.occ.1, level = "Unknown"),
-         pandemic.cat = fct_recode(pandemic.cat,
+### Partner summary stats ###
+summ.WFH.pandemic <- df %>%  
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
                                    "Pandemic\n(2020-2021)" = "Pandemic period",
-                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period")) %>%
-  group_by(pandemic.cat, job.occ.1) %>%
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         prtnr.wfh.cat = prtnr_any + prtnr_lfs.emp_all + prtnr_wfh.any_all,
+         prtnr.wfh.cat = factor(prtnr.wfh.cat,
+                                labels = c("No partner", "Non-employed partner", "Non-WFH partner", "WFH partner"))) %>%
+  group_by(pandemic.cat, prtnr.wfh.cat, prtnr_any, prtnr_lfs.emp_all, prtnr_wfh.any_all) %>%
   summarise(obs = n(),
             p.wfh.any = mean(wfh.any==1, na.rm=T),
             se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
-ggplot(occ.summ.WFH.pandemic) + # Chart prop WFHany by occup
-  geom_col(aes(y=job.occ.1, x=100*p.wfh.any, fill=pandemic.cat), 
-           position = position_dodge(width = 1.2), colour = "black") +
-  facet_grid(cols = vars(pandemic.cat)) +
-  theme_bw() +
-  labs(x="Proportion with any usual WFH (%)", fill = "") +
-  scale_fill_manual(values = c("#74C476FF","#238B45FF","#00441BFF")) +
-  scale_x_continuous(limits = c(0,60), breaks = seq(0,100,20)) +
-  scale_y_discrete(limits = rev) +
-  theme(legend.position = "none", axis.text = element_text(colour = "black"),
-        text = element_text(size = 9), axis.title.y = element_blank(),
-        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave(paste0(chart_output, "occ_pandemicera_wfhany.png"), width = 16, height = 8, units = "cm")
-ggplot(occ.summ.WFH.pandemic) + # Chart prop WFHmost by occup
-  geom_col(aes(y=job.occ.1, x=100*p.wfh.most, fill=pandemic.cat), 
-           position = position_dodge(width = 1.2), colour = "black") +
-  facet_grid(cols = vars(pandemic.cat)) +
-  theme_bw() +
-  labs(x="Proportion with majority WFH hours (%)", fill = "") +
-  scale_fill_manual(values = c("#9E9AC8FF","#6A51A3FF","#3F007DFF")) +
-  scale_x_continuous(limits = c(0,40), breaks = seq(0,60,20)) +
-  scale_y_discrete(limits = rev) +
-  theme(legend.position = "none", axis.text = element_text(colour = "black"),
-        text = element_text(size = 9), axis.title.y = element_blank(),
-        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave(paste0(chart_output, "occ_pandemicera_wfhmost.png"), width = 16, height = 8, units = "cm")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by job.supervise
+  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=prtnr.wfh.cat), 
+           position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
+                    colour = prtnr.wfh.cat),
+                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="", fill = "Partner status") +
+  scale_fill_manual(values = c("#00441B","#238B45","#74C476","#C7E9c0")) +
+  #scale_fill_brewer(palette = "Greens", direction = -1) +
+  scale_color_manual(values = rep("darkgray",12), guide = "none") +
+  scale_y_continuous(limits = c(0,60), breaks = seq(0,60,10)) +
+  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8), axis.title.x = element_blank()) 
+ggsave(paste0(chart_output, "partner_pandemicera_wfhany.png"), width = 16, height = 7, units = "cm")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by job.supervise
+  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=prtnr.wfh.cat), 
+           position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
+                    colour = prtnr.wfh.cat),
+                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
+  theme_classic() +
+  labs(y="Proportion with majority WFH hours (%)", x="", fill = "Partner status") +
+  scale_fill_manual(values = c("#3F007D","#6A51A3","#9e9ac8","#dadaeb")) +
+  scale_color_manual(values = rep("darkgray",12), guide = "none") +
+  scale_y_continuous(limits = c(0,40), breaks = seq(0,60,5)) +
+  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8), axis.title.x = element_blank()) 
+ggsave(paste0(chart_output, "partner_pandemicera_wfhmost.png"), width = 16, height = 7, units = "cm")
 
-### Industry summary stats ###
-ind.summ.WFH.pandemic <- df %>% 
-  mutate(job.ind.1 = fct_na_value_to_level(job.ind.1, level = "Unknown"),
-         pandemic.cat = fct_recode(pandemic.cat,
+### House bedrooms summary stats ###
+summ.WFH.pandemic <- df %>%
+  filter(!is.na(home.bdrooms)) %>%
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
                                    "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
                                    "Pandemic\n(2020-2021)" = "Pandemic period",
-                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period")) %>%
-  group_by(pandemic.cat, job.ind.1) %>%
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         bedrooms.cat = if_else(home.bdrooms > 6, 6, home.bdrooms),
+         bedrooms.cat = if_else(bedrooms.cat < 1, 1, bedrooms.cat),
+         bedrooms.cat = factor(bedrooms.cat, labels = c("1 bedroom","2 bedrooms","3 bedrooms",
+                                                        "4 bedrooms","5 bedrooms","6+ bedrooms"))) %>%
+  group_by(pandemic.cat, bedrooms.cat) %>%
   summarise(obs = n(),
             p.wfh.any = mean(wfh.any==1, na.rm=T),
             se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
             p.wfh.most = mean(wfh.most==1, na.rm=T),
             se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
             .groups = "drop")
-ggplot(ind.summ.WFH.pandemic) + # Chart prop WFHany by urban
-  geom_col(aes(y=job.ind.1, x=100*p.wfh.any, fill=pandemic.cat), 
-           position = position_dodge(width = 1.2), colour = "black") +
-  facet_grid(cols = vars(pandemic.cat)) +
-  theme_bw() +
-  labs(x="Proportion with any usual WFH (%)", fill = "") +
-  scale_fill_manual(values = c("#74C476FF","#238B45FF","#00441BFF")) +
-  scale_x_continuous(limits = c(0,90), breaks = seq(0,100,20)) +
-  scale_y_discrete(limits = rev) +
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by home.bdrooms
+  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=bedrooms.cat), 
+           position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
+                    colour = bedrooms.cat),
+                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="", fill = "Home bedrooms") +
+  scale_fill_brewer(palette = "Greens", direction = -1) +
+  scale_color_manual(values = rep("darkgray",12), guide = "none") +
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,60,10)) +
+  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8), axis.title.x = element_blank()) 
+ggsave(paste0(chart_output, "bedrooms_pandemicera_wfhany.png"), width = 16, height = 9, units = "cm")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by home.bdrooms
+  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=bedrooms.cat), 
+           position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
+                    colour = bedrooms.cat),
+                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
+  theme_classic() +
+  labs(y="Proportion with majority WFH hours (%)", x="", fill = "Home bedrooms") +
+  scale_fill_brewer(palette = "Purples", direction = -1) +
+  scale_color_manual(values = rep("darkgray",12), guide = "none") +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0,60,5)) +
+  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8), axis.title.x = element_blank()) 
+ggsave(paste0(chart_output, "bedrooms_pandemicera_wfhmost.png"), width = 16, height = 9, units = "cm")
+
+
+### Firm size summary stats ###
+label.emplyrsize <- df %>%
+  select(emplyr.size) %>%
+  filter(!is.na(emplyr.size), emplyr.size != 12, emplyr.size != 13) %>%
+  mutate(emplyr.size = if_else(emplyr.size < 5, 11, emplyr.size)) %>%
+  group_by(emplyr.size) %>%
+  slice_head(n = 1) %>%
+  mutate(emplyr.size = paste0("emplyr.size::", emplyr.size)) %>%
+  deframe()
+label.firmsize <- tibble(emplyr.size = label.emplyrsize,
+                         label = c(attr(attr(df$emplyr.size, "labels")[15:21], "names"))) %>%
+  mutate(label = str_remove(label, "^\\[[0-9]{2}\\]\\s*"),
+         label = str_remove(label, "^\\[[0-9]{1}\\]\\s*"),
+         label = str_replace(label, "Don.*fewer\\s*", "Fewer ")) %>%
+  deframe()
+summ.WFH.pandemic <- df %>% 
+  filter(!is.na(emplyr.size), emplyr.size != 12, emplyr.size != 13) %>%
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
+                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
+                                   "Pandemic\n(2020-2021)" = "Pandemic period",
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         emplyr.size = if_else(emplyr.size < 5, 11, emplyr.size),
+         emplyr.size = factor(emplyr.size, labels = label.firmsize),
+         emplyr.size = fct_relevel(emplyr.size, "Fewer than 20",after = 0)) %>%
+  group_by(pandemic.cat, emplyr.size) %>%
+  summarise(obs = n(),
+            p.wfh.any = mean(wfh.any==1, na.rm=T),
+            se.wfh.any = sd(wfh.any==1, na.rm=T)/sqrt(obs),
+            p.wfh.most = mean(wfh.most==1, na.rm=T),
+            se.wfh.most = sd(wfh.most==1, na.rm=T)/sqrt(obs),
+            .groups = "drop")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHany by firm.size
+  geom_col(aes(y=100*p.wfh.any, x=pandemic.cat, fill=emplyr.size), 
+           position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.any-1.96*se.wfh.any), ymax = 100*(p.wfh.any+1.96*se.wfh.any),
+                    colour = emplyr.size),
+                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="", fill = "Employer size (employees)") +
+  scale_fill_brewer(palette = "Greens", direction = -1) +
+  scale_color_manual(values = rep("darkgray",7), guide = "none") +
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,60,10)) +
+  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8), axis.title.x = element_blank()) 
+ggsave(paste0(chart_output, "firmsize_pandemicera_wfhany.png"), width = 16, height = 9, units = "cm")
+ggplot(summ.WFH.pandemic) + # Chart prop WFHmost by firm.size
+  geom_col(aes(y=100*p.wfh.most, x=pandemic.cat, fill=emplyr.size), 
+           position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(x=pandemic.cat, ymin=100*(p.wfh.most-1.96*se.wfh.most), ymax = 100*(p.wfh.most+1.96*se.wfh.most),
+                    colour = emplyr.size),
+                position = position_dodge(width = 0.9), width = 0.3, size = 1) +
+  theme_classic() +
+  labs(y="Proportion with majority WFH hours (%)", x="", fill = "Employer size (employees)") +
+  scale_fill_brewer(palette = "Purples", direction = -1) +
+  scale_color_manual(values = rep("darkgray",7), guide = "none") +
+  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,5)) +
+  theme(legend.position = "bottom", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8), axis.title.x = element_blank()) 
+ggsave(paste0(chart_output, "firmsize_pandemicera_wfhmost.png"), width = 16, height = 9, units = "cm")
+
+## Job tenure
+job.tenure.centile <- df %>%  
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
+                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
+                                   "Pandemic\n(2020-2021)" = "Pandemic period",
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         x_centile = ntile(job.tenure, 15)) %>%
+  group_by(x_centile, pandemic.cat) %>%
+  summarise(
+    mean_x = mean(job.tenure, na.rm = TRUE),
+    mean_any = mean(wfh.any==1, na.rm = TRUE),
+    mean_most = mean(wfh.most==1, na.rm = TRUE),
+    .groups = "drop") %>%
+  group_by(pandemic.cat)
+ggplot(job.tenure.centile) + # Chart prop WFHany by job.tenure
+  geom_line(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Job tenure (years)", colour = "") +
+  scale_colour_manual(values = c("#74C476","#238B45","#00441B")) +
+  scale_y_continuous(limits = c(0,40), breaks = seq(0,60,10)) +
   theme(legend.position = "none", axis.text = element_text(colour = "black"),
-        text = element_text(size = 9), axis.title.y = element_blank(),
-        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave(paste0(chart_output, "indust_pandemicera_wfhany.png"), width = 16, height = 11.5, units = "cm")
-ggplot(ind.summ.WFH.pandemic) + # Chart prop WFHany by urban
-  geom_col(aes(y=job.ind.1, x=100*p.wfh.most, fill=pandemic.cat), 
-           position = position_dodge(width = 1.2), colour = "black") +
-  facet_grid(cols = vars(pandemic.cat)) +
-  theme_bw() +
-  labs(x="Proportion with majority WFH hours (%)", fill = "") +
-  scale_fill_manual(values = c("#9E9AC8FF","#6A51A3FF","#3F007DFF")) +
-  scale_x_continuous(limits = c(0,70), breaks = seq(0,100,20)) +
-  scale_y_discrete(limits = rev) +
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "jobtenure_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
+ggplot(job.tenure.centile) + # Chart prop WFHmost by job.tenure
+  geom_line(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Job tenure (years)", colour = "") +
+  scale_colour_manual(values = c("#9e9ac8","#6A51A3","#3F007D")) +
+  scale_y_continuous(limits = c(0,25), breaks = seq(0,60,5)) +
   theme(legend.position = "none", axis.text = element_text(colour = "black"),
-        text = element_text(size = 9), axis.title.y = element_blank(),
-        panel.grid.major.x = element_line(linetype = "dashed", colour = "darkgrey")) 
-ggsave(paste0(chart_output, "indust_pandemicera_wfhmost.png"), width = 16, height = 11.5, units = "cm")
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "jobtenure_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
+
+## wages
+wages.centile <- df %>%  
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
+                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
+                                   "Pandemic\n(2020-2021)" = "Pandemic period",
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         x_centile = ntile(wage.mn, 15)) %>%
+  group_by(x_centile, pandemic.cat) %>%
+  summarise(
+    mean_x = mean(wage.mn, na.rm = TRUE),
+    mean_any = mean(wfh.any==1, na.rm = TRUE),
+    mean_most = mean(wfh.most==1, na.rm = TRUE),
+    .groups = "drop") %>%
+  group_by(pandemic.cat)
+ggplot(wages.centile) + # Chart prop WFHany by wage.mn
+  geom_line(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Wages ($)", colour = "") +
+  scale_colour_manual(values = c("#74C476","#238B45","#00441B")) +
+  scale_y_continuous(limits = c(0,70), breaks = seq(0,70,10)) +
+  scale_x_continuous(breaks = seq(0,150,20)) +
+  theme(legend.position = "none", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "wage_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
+ggplot(wages.centile) + # Chart prop WFHmost by wage.mn
+  geom_line(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Wages ($)", colour = "") +
+  scale_colour_manual(values = c("#9e9ac8","#6A51A3","#3F007D")) +
+  scale_y_continuous(limits = c(0,45), breaks = seq(0,60,10)) +
+  theme(legend.position = "none", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "wage_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
+
+## Distance to work
+job.dist.centile <- df %>%
+  filter(job.dist > 0 & !is.na(job.dist)) %>%
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
+                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
+                                   "Pandemic\n(2020-2021)" = "Pandemic period",
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         x_centile = ntile(job.dist, 15)) %>%
+  group_by(x_centile, pandemic.cat) %>%
+  summarise(
+    mean_x = mean(job.dist, na.rm = TRUE),
+    mean_any = mean(wfh.any==1, na.rm = TRUE),
+    mean_most = mean(wfh.most==1, na.rm = TRUE),
+    .groups = "drop") %>%
+  group_by(pandemic.cat)
+ggplot(job.dist.centile) + # Chart prop WFHany by job.dist
+  geom_line(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Distance to work (km, log scale)", colour = "") +
+  scale_colour_manual(values = c("#74C476","#238B45","#00441B")) +
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,70,10)) +
+  scale_x_log10() +
+  theme(legend.position = "none", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "jobdist_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
+ggplot(job.dist.centile) + # Chart prop WFHmost by job.dist
+  geom_line(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Distance to work (km, log scale)", colour = "") +
+  scale_colour_manual(values = c("#9e9ac8","#6A51A3","#3F007D")) +
+  scale_y_continuous(limits = c(0,25), breaks = seq(0,60,5)) +
+  scale_x_log10() +
+  theme(legend.position = "none", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "jobdist_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
+
+## Distance to nearest city
+city.dist.centile <- df %>%
+  filter(dist.nearstcity > 0 & !is.na(dist.nearstcity)) %>%
+  mutate(pandemic.cat = fct_recode(pandemic.cat,
+                                   "Pre-pandemic\n(2017-2019)" = "Pre-pandemic period",
+                                   "Pandemic\n(2020-2021)" = "Pandemic period",
+                                   "Post-pandemic\n(2022-2024)" = "Post-pandemic period"),
+         x_centile = ntile(dist.nearstcity, 15)) %>%
+  group_by(x_centile, pandemic.cat) %>%
+  summarise(
+    mean_x = mean(dist.nearstcity, na.rm = TRUE),
+    mean_any = mean(wfh.any==1, na.rm = TRUE),
+    mean_most = mean(wfh.most==1, na.rm = TRUE),
+    .groups = "drop") %>%
+  group_by(pandemic.cat)
+ggplot(city.dist.centile) + # Chart prop WFHany by dist.nearstcity
+  geom_line(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_any, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Distance to nearest city (km, log scale)", colour = "") +
+  scale_colour_manual(values = c("#74C476","#238B45","#00441B")) +
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,70,10)) +
+  scale_x_log10() +
+  theme(legend.position = "none", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "citydist_pandemicera_wfhany.png"), width = 7.9, height = 7, units = "cm")
+ggplot(city.dist.centile) + # Chart prop WFHmost by dist.nearstcity
+  geom_line(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.2) +
+  geom_point(aes(y=100*mean_most, x=mean_x, colour=pandemic.cat), size = 1.5) +
+  theme_classic() +
+  labs(y="Proportion with any usual WFH (%)", x="Distance to nearest city (km, log scale)", colour = "") +
+  scale_colour_manual(values = c("#9e9ac8","#6A51A3","#3F007D")) +
+  scale_y_continuous(limits = c(0,35), breaks = seq(0,60,5)) +
+  scale_x_log10() +
+  theme(legend.position = "none", axis.text = element_text(colour = "black"),
+        text = element_text(size = 8)) 
+ggsave(paste0(chart_output, "citydist_pandemicera_wfhmost.png"), width = 7.9, height = 7, units = "cm")
