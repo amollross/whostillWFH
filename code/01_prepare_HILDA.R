@@ -82,8 +82,9 @@ wfhdata <- wfhdata %>%
 
 # Filter for observations from wave 4 (2004) onwards
 wfhdata <- wfhdata %>%
-  filter(wave >= 2)
+  filter(wave >= 4)
 
+### Cleaning
 # Rename variables for ease of use
 wfhdata <- wfhdata %>%
   arrange(xwaveid, wave) %>%
@@ -260,7 +261,7 @@ wfhdata <- wfhdata %>%
          home.thouse = if_else(dodtyp %in% 5:7, 1, 0),
          home.other = if_else(home.house ==0 & home.unit ==0 & home.thouse ==0, 1, 0),
          SA1 = as.numeric(SA1)
-  )
+         )
 
 # Drop transformed variables
 wfhdata <- wfhdata %>%
@@ -274,35 +275,6 @@ wfhdata <- wfhdata %>%
             "helthwk", # health conditions preventing work
             "dodtyp" # dwelling type 
   )) 
-
-# Turn binary WFH flag into a factor variable
-wfhdata <- wfhdata %>%
-  mutate(wfh.any = if_else(is.na(wfh.any), 0, wfh.any),
-         wfh.any = factor(wfh.any,
-                          labels = c("No WFH", "WFH"),
-                          exclude = NULL))
-
-# Build WFH category variables ancross never, always, hybrid split
-wfhdata <- wfhdata %>%
-  mutate(wfh.fullremote = if_else(wfh.prop == 1, 1, 0),
-         wfh.hybrid.high = if_else(wfh.prop < 1 & wfh.prop >= 0.5, 1, 0),
-         wfh.hybrid.low = if_else(wfh.prop < 0.5 & wfh.prop > 0, 1, 0),
-         wfh.never = if_else(wfh.prop == 0, 1, 0),
-         wfh.check = wfh.fullremote + wfh.hybrid.high + wfh.hybrid.low + wfh.never) # check variable
-wfhdata %>% 
-  count(wfh.check > 1)
-wfhdata <- wfhdata %>%
-  select(!wfh.check)
-# Convert WFH dummies to single factor (categorical) variable
-wfhdata <- wfhdata %>%
-  mutate(wfh.category = if_else(wfh.never == 1, 0,
-                                if_else(wfh.hybrid.low == 1, 1,
-                                        if_else(wfh.hybrid.high == 1, 2,
-                                                if_else(wfh.fullremote == 1, 3, NA)))),
-         wfh.category = factor(wfh.category,
-                               labels = c("Never", "Low hybrid", "High hybrid", "Fully remote", NA),
-                               exclude = NULL))
-
 
 # Translate 1-digit, 2-digit and 4-digit occupation codes to usable labels
 tally <- wfhdata %>%
@@ -481,18 +453,6 @@ wfhdata <- wfhdata %>%
   mutate(disab.duration = case_when(disab == 1 ~ row_number() - 1L, disab == 0 ~ 0L)) %>%
   ungroup() ### lag function makes it slow here ###
 
-# Generate 10-year bins for age
-wfhdata <- wfhdata %>%
-  mutate(age.cat = if_else(age<=25, 0,
-                           if_else(age>25 & age <=35, 1, 
-                                   if_else(age>35 & age <=45, 2, 
-                                           if_else(age>45 & age <=55, 3, 
-                                                   if_else(age>55 & age <=65, 4, 
-                                                           if_else(age >65, 5, NA)))))),
-         age.cat = factor(age.cat, 
-                          labels = c("25 or under", "26 to 35", "36 to 45", "46 to 55", "56 to 65", "Over 65"),
-                          exclude = NA))
-
 # Generate 5-year bins for age
 wfhdata <- wfhdata %>%
   mutate(age.cat.5yr = if_else(age<=20, 0,
@@ -510,18 +470,6 @@ wfhdata <- wfhdata %>%
                               labels = c("< 21","21-25","26-30","31-35","36-40","41-45","46-50",
                                          "51-55","56-60","61-65","> 65"),
                               exclude = NA))
-
-# Generate bins for tenure
-wfhdata <- wfhdata %>%
-  mutate(tenure.cat = if_else(job.tenure<1, 0,
-                              if_else(job.tenure>=1 & job.tenure <2, 1, 
-                                      if_else(job.tenure>=2 & job.tenure <3, 2, 
-                                              if_else(job.tenure>=3 & job.tenure <5, 3, 
-                                                      if_else(job.tenure>=5 & job.tenure <10, 4, 
-                                                              if_else(job.tenure >=10, 5, NA)))))),
-         tenure.cat = factor(tenure.cat, 
-                             labels = c("< 1 year", "1-2 years", "2-3 years", "3-5 years", "5-10 years", "10+ years"),
-                             exclude = NA))
 
 ### Data check for impossible outcomes
 # Proportion of time spent WFH is greater than 1
@@ -606,7 +554,7 @@ prtnrdata <- wfhdata %>%
 wfhdata <- wfhdata %>%
   left_join(prtnrdata, by = c("hhpxid" = "xwaveid", "wave" = "wave")) %>%
   mutate(prtnr_any = if_else(!is.na(hhpxid), 1, 0),
-         prtnr_wfh.any_all = if_else(prtnr_wfh.any == "No WFH" | is.na(prtnr_wfh.any), 0, 1),
+         prtnr_wfh.any_all = if_else(prtnr_wfh.any == 0 | is.na(prtnr_wfh.any), 0, 1),
          prtnr_lfs.emp_all = if_else(prtnr_any == 1, prtnr_lfs.emp.ft + prtnr_lfs.emp.pt,0),
          prtnr_lfs.emp_all = if_else(is.na(prtnr_lfs.emp_all),0,prtnr_lfs.emp_all),
          prtnr_female_all = if_else(prtnr_female == "0" | is.na(prtnr_female), 0, 1),
@@ -655,54 +603,64 @@ save(wfhdata.employees, file = "wfh_workingdata_unbalanced_employees.Rdata")
 
 
 #### FINAL SAMPLE CONSTRUCTION AND DROPPED OBSERVATION COUNTS ####
-covars <- c("wfh.any", "wfh.prop", "age.cat.5yr", "unieduc", "vocateduc", "female", "prtnr_any", 
+all.covars <- c("wfh.any", "wfh.prop", "age.cat.5yr", "unieduc", "vocateduc", "female", "prtnr_any", 
             "prtnr_lfs.emp_all", "prtnr_wfh.any_all", "child.resid", "child.yngst.bin", "disab", 
-            "disab.lmtswk", "disab.lmtswk.scale", "disab.type.cogni", "disab.duration", "wage.mn", 
+            "disab.lmtswk.scale", "disab.type.cogni", "disab.duration", "wage.mn", 
             "lfs.emp.pt", "job.casual", "job.tenure", "job.supervise", "job.dist", "DNscore_manual",
             "satisfact.life", "jobsat.ovrall", "satisfact.home", "home.bdrooms.pp", "urban",
-            "innr.region", "dist.nearstcity", "state")
+            "innr.region", "dist.nearstcity", "state", "job.ind.1", "job.occ.1")
+extended.covars <- c("wfh.any", "wfh.prop", "age.cat.5yr", "unieduc", "vocateduc", 
+                     "female", "prtnr_any", "child.resid", "child.yngst.bin", 
+                     "disab", "disab.lmtswk.scale", "disab.type.cogni", "disab.duration", 
+                     "job.tenure", "job.supervise", "DNscore_manual",
+                     "urban",  "innr.region", "dist.nearstcity", "state")
+geog.covars <- c("urban",  "innr.region", "dist.nearstcity")
+employ.covars <- c("job.tenure", "job.supervise")
+main.covars <- c("wfh.any", "wfh.prop", "age.cat.5yr", "unieduc", "vocateduc", 
+                 "female", "prtnr_any", "child.resid", "child.yngst.bin", 
+                 "disab", "disab.lmtswk.scale", "disab.type.cogni", "disab.duration", 
+                 "DNscore_manual", "state")
 
 # Basic obs counts and missingness checks
 wfhdata %>% filter(year >= 2017) %>% 
   summarise(n=n(), #total obs in HILDA 2017-2024
             n.ind=n_distinct(xwaveid)) #individuals in HILDA 2017-2024
 wfhdata %>% filter(year >= 2017,lfs.nilf==1 | lfs.unemp==1) %>% 
-  count() #obs that are not employed
+        count() #obs that are not employed
 wfhdata %>% filter(year >= 2017) %>% count(lfs.emp) #obs that are employed
 wfhdata %>% filter(year >= 2017,lfs.emp.self==1) %>% 
-  count() #obs that are self-employed
+        count() #obs that are self-employed
 wfhdata %>% filter(year >= 2017) %>% count(lfs.emp==1 & lfs.emp.self==0) #obs that are employees
 wfhdata %>% filter(year >= 2017, lfs.nilf == 0 & lfs.unemp == 0) %>%
   group_by(pandemic.cat, lfs.emp.self) %>%
   summarise(obs = n(),
-            wfh.any = sum(wfh.any == "WFH")/obs, 
+            wfh.any = sum(wfh.any)/obs, 
             wfh.prop = mean(wfh.prop, na.rm = T)) # Summary of self-employed WFH uptake by pandemic period
 wfhdata %>% filter(year >= 2017,lfs.nilf==0 & lfs.unemp==0 & lfs.emp.self==0) %>% 
-  count(age<15, age >69) #obs outside 15-69 age bracket
-wfhdata %>% filter(year >= 2017, lfs.emp==1 & lfs.emp.self==0) %>% count(age<15, age>69) #obs that are working-age employees
+        count(age<18, age >64) #obs outside 18-64 age bracket
+wfhdata %>% filter(year >= 2017, lfs.emp==1 & lfs.emp.self==0) %>% count(age>=18 & age<=64) #obs that are working-age employees
 
 ### Build baseline df of full sample for analysis
 df <- wfhdata.employees %>% 
-  filter(year >= 2017, age >=15, age <=69)
+  filter(year >= 2017, age >=18, age <=64)
 
 # Further obs counts and missingness checks
-missing <- df %>% filter(if_any(all_of(covars), ~is.na(.x))) %>% nrow() #count rows with any missing obs
+missing <- df %>% filter(if_any(all_of(extended.covars), ~is.na(.x))) %>% nrow() #count rows with any missing obs
 missing/(df %>% count()) #proportion missing
-missing <- df %>% summarise(across(covars, ~ sum(is.na(.x)), .names = "n_miss_{.col}")) #summary of missing obs by variable
-df %>% count(is.na(wage.mn), is.na(job.dist)) #counts for main missing variables and overlaps
-(df %>% filter(is.na(job.traveltime)) %>% nrow())/(df %>% count()) # share with missing travel time
-# df %>% drop_na(covars) %>% count(is.na(wfh.formalagree), wfh.any) #counts for missing WFH formal agreement variable
+missing <- df %>% summarise(across(extended.covars, ~ sum(is.na(.x)), .names = "n_miss_{.col}")) #summary of missing obs by variable
+#df %>% count(is.na(wage.mn), is.na(job.dist)) #counts for main missing variables and overlaps
+#(df %>% filter(is.na(job.traveltime)) %>% nrow())/(df %>% count()) # share with missing travel time
+# df %>% drop_na(extended.covars) %>% count(is.na(wfh.formalagree), wfh.any) #counts for missing WFH formal agreement variable
 # df %>% count(is.na(emplyr.large)) #count for firm size missingness
-df %>% drop_na(covars) %>% count(is.na(job.ind.1),is.na(job.occ.1)) #count missing industry and occupation FE
-df %>% drop_na(covars) %>% summarise(n=n(), #total obs in final sample
+df %>% drop_na(extended.covars) %>% count(is.na(job.ind.1),is.na(job.occ.1)) #count missing industry and occupation FE
+df %>% drop_na(extended.covars) %>% summarise(n=n(), #total obs in final sample
                                      n.ind=n_distinct(xwaveid)) #individuals in final sample
 
 ### Save baseline df with listwise deletion of missing variables and new WFHmost variable
 df <- wfhdata.employees %>% 
-  filter(year >= 2017, age >=15, age <=69) %>% 
-  drop_na(all_of(covars)) %>%
-  mutate(wfh.any = if_else(wfh.any=="WFH",1,0),
-         wfh.most = if_else(wfh.prop >= 0.5,1,0),
+  filter(year >= 2017, age >=18, age <=64) %>% 
+  drop_na(all_of(extended.covars)) %>%
+  mutate(wfh.most = if_else(wfh.prop >= 0.5,1,0),
          wfh.most.cat = if_else(wfh.most == 1, 1,
                                 if_else(wfh.any == 1, 0, -1)),
          wfh.most.cat = factor(wfh.most.cat, labels = c("No WFH", "Some WFH", "Mostly WFH")),
@@ -720,4 +678,3 @@ df <- wfhdata.employees %>%
          job.ind.2 = fct_na_value_to_level(job.ind.2, level = "Unknown"),
          job.occ = fct_na_value_to_level(job.occ, level = "Unknown"),
          job.occ.1 = fct_na_value_to_level(job.occ.1, level = "Unknown"))
-
